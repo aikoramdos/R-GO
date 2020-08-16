@@ -1,0 +1,163 @@
+/*------------------------------------------------------------------------------------
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+　　■■■■■■■■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　■■■■■■■■■■■■　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■■■■■■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■■■■■■■■　　　　　　　　　　　　　　■■■■■■　　　　　　　　　　　　　
+　　■　　　■　　　　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　■　　　　　■■■■■■■　　■■■■■■■■■■■■　　　　　　　　　　
+　　■　　　■　　　　　■　　■　　■　　　　■　　　　　　■　　　　　　　　　　　　
+　　■　　　■　　　　　■　　■　　■　　　■　　■■■■　　■　　　　　　　　　　　
+　　■　　　■■■■　　■■■■　　■　　■　　　　■　　　　　■　　　　　　　　　　
+　　　　　　　　　　　　　　　　　　　　■　　　　■■■■　　　　■　　　　　　　　　
+　　　　　　　　　　　　　　　　　　　■　　　　　　■■■　　　　　■　　　　　　　　
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+--------------------------------------------------------------------------------------
+
+
+	Version 0.1.1 (19/10/16)
+
+
+
+------------------------------------------------------------------------------------*/
+
+/*
+	初期化 ここから-------------------------------------------------------------------
+*/
+*prog_start
+title "Rの碁"
+dim mainboard,19,19
+/*
+	初期化 ここまで-------------------------------------------------------------------
+*/
+/*
+	タイトル画面 ここから-------------------------------------------------------------------
+*/
+*titlescreen
+cls
+mes "Rの碁"
+button "はじめる",*setting
+button "おわる",*endprogram
+stop
+/*
+	タイトル画面 ここまで-------------------------------------------------------------------
+*/
+*endprogram
+	cls
+	repeat 36
+	soku=720-20*cnt
+	screen 0,480,soku
+	i = (255-cnt*7)*65536+cnt*7
+	j = cnt*256*7+(255-cnt*7)
+	gradf 0,0,480,720,1,i,j
+	pos 0,0
+	font msgothic,100
+	mes "Rの"
+	pos 150,20
+	font msgothic,150
+	mes "碁"
+	pos 170,160
+	font msgothic,50
+	mes "さようなら..."
+	
+	await 50
+	loop
+	end
+/*
+	設定画面 ここから-------------------------------------------------------------------
+*/
+*setting
+	cls
+	mes "始めますか？"
+	button "はじめる",*gogame
+	button "やめる",*titlescreen
+	stop
+/*
+	設定画面 ここまで-------------------------------------------------------------------
+*/
+/*
+	本体 ここから-------------------------------------------------------------------
+*/
+*gogame
+screen 0,450,343
+cls
+loopctr = 0
+selectposx = 10
+selectposy = 10
+*mainloop
+loopctr ++
+redraw 0
+color 220,200,120
+boxf
+hyojitext = ""
+font msgothic,18
+for j,0,19
+	for i,0,19
+			if mainboard(i,j) = 0{
+				hyojitext += "＋"
+			}else : if mainboard(i,j) = 1{
+				hyojitext += "●"
+			}else : if mainboard(i,j) = 2{
+				hyojitext += "○"
+			}else {
+				hyojitext += "！"
+			}
+	next
+	hyojitext += "\n"
+next
+
+
+
+getkey isPushingSpace,32
+if isPushingSpace = 0{
+	pushedSpace = 0
+}
+getkey isPushingclick,1
+if isPushingclick = 0{
+	pushedclick = 0
+}
+getkey isPushingRightclick,2
+if isPushingRightclick = 0{
+	pushedRightclick = 0
+}
+Provisionalx = mousex/18
+Provisionaly = mousey/18
+
+if Provisionalx < 19 and Provisionaly < 19 {
+	if mainboard(Provisionalx,Provisionaly) = 0{
+		if isPushingclick = 1 and pushedclick = 0 {
+			if goturn = 0 {
+				mainboard(Provisionalx,Provisionaly) = 1
+				goturn = 2
+			}
+			if goturn = 1 {
+				mainboard(Provisionalx,Provisionaly) = 2
+				goturn = 0
+			}
+			if goturn = 2 {
+				goturn = 1
+			}
+			pushedclick = 1
+		}
+	}
+}
+pos 0,0
+color
+mes hyojitext
+pos 350,0
+if goturn = 0{
+	mes "黒の番です"
+}
+
+if goturn = 1{
+	mes "白の番です"
+}
+
+redraw 1
+await 16
+goto *mainloop
+/*
+	本体 ここまで-------------------------------------------------------------------
+*/

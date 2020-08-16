@@ -1,0 +1,379 @@
+/*------------------------------------------------------------------------------------
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+　　■■■■■■■■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　■■■■■■■■■■■■　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■■■■■■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■■■■■■■■　　　　　　　　　　　　　　■■■■■■　　　　　　　　　　　　　
+　　■　　　■　　　　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　■　　　　　■■■■■■■　　■■■■■■■■■■■■　　　　　　　　　　
+　　■　　　■　　　　　■　　■　　■　　　　■　　　　　　■　　　　　　　　　　　　
+　　■　　　■　　　　　■　　■　　■　　　■　　■■■■　　■　　　　　　　　　　　
+　　■　　　■■■■　　■■■■　　■　　■　　　　■　　　　　■　　　　　　　　　　
+　　　　　　　　　　　　　　　　　　　　■　　　　■■■■　　　　■　　　　　　　　　
+　　　　　　　　　　　　　　　　　　　■　　　　　　■■■　　　　　■　　　　　　　　
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+--------------------------------------------------------------------------------------
+
+
+	Version 0.2.1(20/04/22)
+
+
+
+------------------------------------------------------------------------------------*/
+
+/*
+	初期化 ここから-------------------------------------------------------------------
+*/
+*prog_start
+title "Rの碁"
+dim mainboard,20,20
+buffer 5
+picload "board.png",1
+buffer 6
+picload "black.png",1
+buffer 7
+picload "white.png",1
+gsel 0
+/*
+	初期化 ここまで-------------------------------------------------------------------
+*/
+/*
+	タイトル画面 ここから-------------------------------------------------------------------
+*/
+*titlescreen
+cls
+mes "Rの碁"
+button "はじめる",*setting
+button "おわる",*endprogram
+stop
+/*
+	タイトル画面 ここまで-------------------------------------------------------------------
+*/
+*endprogram
+	cls
+	repeat 36
+	soku=720-20*cnt
+	screen 0,480,soku
+	i = (255-cnt*7)*65536+cnt*7
+	j = cnt*256*7+(255-cnt*7)
+	gradf 0,0,480,720,1,i,j
+	pos 0,0
+	font msgothic,100
+	mes "Rの"
+	pos 150,20
+	font msgothic,150
+	mes "碁"
+	pos 170,160
+	font msgothic,50
+	mes "さようなら..."
+	
+	await 50
+	loop
+	end
+/*
+	設定画面 ここから-------------------------------------------------------------------
+*/
+*setting
+	cls
+	mes "始めますか？"
+	button "ひとりで",*solostart
+	button "ふたりで",*duostart
+	button "全自動モード",*autostart
+	button "やめる",*titlescreen
+	stop
+/*
+	設定画面 ここまで-------------------------------------------------------------------
+*/
+*solostart
+	enableai=1
+	goto *gogame
+*duostart
+	enableai=0
+	goto *gogame
+*autostart
+	enableai=2
+	goto *gogame
+/*
+	本体 ここから-------------------------------------------------------------------
+*/
+*gogame
+screen 0,450,343
+cls
+loopctr = 0
+selectposx = 10
+selectposy = 10
+*mainloop
+loopctr ++
+redraw 0
+color 250,225,160
+boxf
+
+
+getkey isPushingSpace,32
+if isPushingSpace = 0{
+	pushedSpace = 0
+}
+getkey isPushingclick,1
+if isPushingclick = 0{
+	pushedclick = 0
+}
+getkey isPushingRightclick,2
+if isPushingRightclick = 0{
+	pushedRightclick = 0
+}
+Provisionalx = mousex/18
+Provisionaly = mousey/18
+
+if Provisionalx < 19 and Provisionaly < 19 {
+	if mainboard(Provisionalx,Provisionaly) = 0{
+		if isPushingclick = 1 and pushedclick = 0 {
+			disp = ""
+			if goturn = 0 {
+				mainboard(Provisionalx,Provisionaly) = 1
+				goturn = 2
+			}
+			if goturn = 1 {
+				mainboard(Provisionalx,Provisionaly) = 2
+				goturn = 0
+			}
+			if goturn = 2 {
+				goturn = 1
+			}
+			
+			gosub *callgetstone
+			if chakushukinshi_flag=2{
+				disp += "着手禁止点です"
+				if goturn = 0 {
+					mainboard(Provisionalx,Provisionaly) = 0
+					goturn = 2
+				}
+				if goturn = 1 {
+					mainboard(Provisionalx,Provisionaly) = 0
+					goturn = 0
+				}
+				if goturn = 2 {
+					goturn = 1
+				}
+			}
+			pushedclick = 1
+		}
+	}
+}
+
+if pushedclick == 0 and enableai != 0 and goturn = 1{
+*retryAI0
+	Provisionalx=rnd(19)
+	Provisionaly=rnd(19)
+	if mainboard(Provisionalx,Provisionaly)!=0 : goto *retryAI0
+	mainboard(Provisionalx,Provisionaly) = 2
+	goturn = 0
+	pushedclick = 1
+	gosub *callgetstone
+	if chakushukinshi_flag=2{
+		mainboard(Provisionalx,Provisionaly) = 0
+		goto *retryAI0
+	}
+	;wait 5
+}
+
+if pushedclick == 0 and enableai == 2 and goturn = 0 and aidid<100{
+*retryAI1
+	Provisionalx=rnd(19)
+	Provisionaly=rnd(19)
+	if mainboard(Provisionalx,Provisionaly)!=0 : goto *retryAI1
+	mainboard(Provisionalx,Provisionaly) = 1
+	goturn = 1
+	pushedclick = 1
+	gosub *callgetstone
+	if chakushukinshi_flag=2{
+		mainboard(Provisionalx,Provisionaly) = 0
+		goto *retryAI1
+	}
+	;wait 5
+}
+
+pos 0,0
+gcopy 5,0,0,342,342
+gmode 2
+hyojitext = ""
+font msgothic,18
+for j,0,19
+	for i,0,19
+			pos i*18,j*18
+			if mainboard(i,j) = 0{
+				
+			}else : if mainboard(i,j) = 1{
+				gcopy 6,0,0,18,18
+			}else : if mainboard(i,j) = 2{
+				gcopy 7,0,0,18,18
+			}else {
+				hyojitext += "！"
+			}
+	next
+	hyojitext += "\n"
+next
+pos 0,0
+color
+mes hyojitext
+pos 350,0
+if goturn = 0{
+	mes "黒の番です"
+}
+
+if goturn = 1{
+	mes "白の番です"
+}
+mes "(" + Provisionalx +  "," + Provisionaly + ")"
+mes disp
+redraw 1
+await 16
+goto *mainloop
+/*
+	本体 ここまで-------------------------------------------------------------------
+*/
+*callgetstone
+logmes "callgetstone呼び出し"
+chakushukinshi_flag = 0 //着手禁止点フラグ
+if Provisionalx> -2 and Provisionalx< 18 and Provisionaly >-1 and Provisionaly < 19{
+	if mainboard(Provisionalx+1,Provisionaly) != 0{
+		dfx = Provisionalx+1
+		dfy = Provisionaly
+		gosub *getstone
+	}
+}
+if Provisionalx> -1 and Provisionalx< 19 and Provisionaly >-2 and Provisionaly < 18{
+	if mainboard(Provisionalx,Provisionaly+1) != 0{
+		dfx = Provisionalx
+		dfy = Provisionaly+1
+		gosub *getstone
+	}
+}
+if Provisionalx> 0 and Provisionalx< 20 and Provisionaly >-1 and Provisionaly < 19{
+	if mainboard(Provisionalx-1,Provisionaly) != 0{
+		dfx = Provisionalx-1
+		dfy = Provisionaly
+		gosub *getstone
+	}
+}
+if Provisionalx> -1 and Provisionalx< 19 and Provisionaly >0 and Provisionaly < 20{
+	if mainboard(Provisionalx,Provisionaly-1) != 0{
+		dfx = Provisionalx
+		dfy = Provisionaly-1
+		gosub *getstone
+	}
+}
+if Provisionalx> -1 and Provisionalx< 19 and Provisionaly >-1 and Provisionaly < 19{
+	if mainboard(Provisionalx,Provisionaly) != 0{//着手禁止点に打ってる
+		dfx = Provisionalx
+		dfy = Provisionaly
+		chakushukinshi_flag = 1 //着手禁止点フラグ
+		gosub *getstone
+	}
+}
+if chakushukinshi_flag!=2 : chakushukinshi_flag = 0
+return
+
+
+*getstone
+logmes "  getstone呼び出し(" + dfx + "," + dfy + ")
+dim chklistx
+dim chklisty
+chklistx(0) = dfx
+chklisty(0) = dfy
+listusing = 0	//リスト使用量(書き込んだ量)
+ctmstone = mainboard(dfx,dfy)
+alreadychecked = 0//すでに調べたリストの量
+*stoneloop
+flag = 0
+chkstoneflag = 0
+tx = chklistx(alreadychecked)
+ty = chklisty(alreadychecked)
+logmes "    チェック:(" + tx + "," + ty  +")を開始"
+if tx > -2 and tx<18 and ty>-1 and ty < 19 : if mainboard(tx+1,ty) = 0 : logmes "        呼吸点発見(右)" + tx + "/" + ty : return 0 //呼吸点があったらセーフ
+if tx > -1 and tx<19 and ty>-2 and ty < 18 : if mainboard(tx,ty+1) = 0 : logmes "        呼吸点発見(下)" + tx + "/" + ty : return 0
+if tx > 0  and tx<20 and ty>-1 and ty < 19 : if mainboard(tx-1,ty) = 0 : logmes "        呼吸点発見(左)" + tx + "/" + ty : return 0
+if tx > -1 and tx<19 and ty>0  and ty < 20 : if mainboard(tx,ty-1) = 0 : logmes "        呼吸点発見(上)" + tx + "/" + ty : return 0
+
+
+if tx > -2 and tx<18 and ty>-1 and ty < 19{
+if mainboard(tx+1,ty) = ctmstone{	//右が自色のとき
+	logmes "        右が自色"
+	repeat listusing//リストに対象がないことを確認する。
+		if chklistx(cnt) = tx+1 and chklisty(cnt) = ty: cendf=1 : break//対象がリストに存在したら飛ばす
+	loop
+	if cendf = 1 : goto *checkendr
+	logmes "        対象はリストに存在しない"
+	listusing++	//リスト仕様にフラグ
+	flag = 1	//死にフラグ
+	chklistx(listusing) = tx + 1 //リストに追加
+	chklisty(listusing) = ty
+}
+}
+*checkendr//右のright
+
+if tx > -1 and tx<19 and ty>-2 and ty < 18{
+if mainboard(tx,ty+1) = ctmstone{	//上が自色のとき
+	logmes "        上が自色"
+	repeat listusing//リストに対象がないことを確認する。
+		if chklistx(cnt) = tx and chklisty(cnt) = ty+1: cendf=1 : break//対象がリストに存在したら飛ばす
+	loop
+	if cendf = 1 : goto *checkendd
+	logmes "        対象はリストに存在しない"
+	listusing++	//リスト仕様にフラグ
+	flag = 1	//死にフラグ
+	chklistx(listusing) = tx //リストに追加
+	chklisty(listusing) = ty + 1
+}
+}
+*checkendd//下のdown
+
+if tx > 0  and tx<20 and ty>-1 and ty < 19{
+if mainboard(tx-1,ty) = ctmstone{	//左が自色のとき
+	logmes "        左が自色"
+	repeat listusing//リストに対象がないことを確認する。
+		if chklistx(cnt) = tx-1 and chklisty(cnt) = ty:  cendf=1 : break//対象がリストに存在したら飛ばす
+	loop
+	if cendf = 1 : goto *checkendl
+	logmes "        対象はリストに存在しない"
+	listusing++	//リスト仕様にフラグ
+	flag = 1	//死にフラグ
+	chklistx(listusing) = tx-1 //リストに追加
+	chklisty(listusing) = ty
+}
+}
+*checkendl//下のleft
+
+if tx > -1 and tx<19 and ty>0  and ty < 20{
+if mainboard(tx,ty-1) = ctmstone{	//上が自色のとき※うえからカウントされている
+	logmes "        上が自色"
+	repeat listusing//リストに対象がないことを確認する。
+		if chklistx(cnt) = tx and chklisty(cnt) = ty-1: cendf=1 : break//対象がリストに存在したら飛ばす
+	loop
+	if cendf = 1 : goto *checkendu
+	logmes "        対象はリストに存在しない"
+	listusing++					//リスト仕様にフラグ
+	flag = 1					//死にフラグ
+	chklistx(listusing) = tx	//リストに追加
+	chklisty(listusing) = ty - 1
+}
+}
+*checkendu						//上のup
+
+if alreadychecked < listusing {
+	alreadychecked++
+	goto *stoneloop	//死にがfalse
+}else{
+	logmes "      取られた"
+	assert
+	if chakushukinshi_flag = 1{
+		chakushukinshi_flag = 2
+		return 0
+	}
+	repeat listusing+1
+		logmes "      処理" + chklistx(cnt) + "," + chklisty(cnt) + ""
+		mainboard(chklistx(cnt),chklisty(cnt))=0
+	loop
+	return 0
+}

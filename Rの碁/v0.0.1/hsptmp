@@ -1,0 +1,150 @@
+/*------------------------------------------------------------------------------------
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+　　■■■■■■■■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　■■■■■■■■■■■■　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■■■■■■　　　　　　　　　　　　　
+　　■　　　　　　■　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■■■■■■■■　　　　　　　　　　　　　　■■■■■■　　　　　　　　　　　　　
+　　■　　　■　　　　　　　　　　　　　　　　　■　　　　■　　　　　　　　　　　　　
+　　■　　　■　　　　　■■■■■■■　　■■■■■■■■■■■■　　　　　　　　　　
+　　■　　　■　　　　　■　　■　　■　　　　■　　　　　　■　　　　　　　　　　　　
+　　■　　　■　　　　　■　　■　　■　　　■　　■■■■　　■　　　　　　　　　　　
+　　■　　　■■■■　　■■■■　　■　　■　　　　■　　　　　■　　　　　　　　　　
+　　　　　　　　　　　　　　　　　　　　■　　　　■■■■　　　　■　　　　　　　　　
+　　　　　　　　　　　　　　　　　　　■　　　　　　■■■　　　　　■　　　　　　　　
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　
+--------------------------------------------------------------------------------------
+
+
+	Version 0.0.1 (19/10/12)
+
+
+
+------------------------------------------------------------------------------------*/
+
+/*
+	初期化 ここから-------------------------------------------------------------------
+*/
+*prog_start
+title "Rの碁"
+dim mainboard,19,19
+/*
+	初期化 ここまで-------------------------------------------------------------------
+*/
+/*
+	タイトル画面 ここから-------------------------------------------------------------------
+*/
+*titlescreen
+cls
+mes "Rの碁"
+button "はじめる",*setting
+button "おわる",*endprogram
+stop
+/*
+	タイトル画面 ここまで-------------------------------------------------------------------
+*/
+*endprogram
+	cls
+	mes "さようなら..."
+	wait 150
+	end
+/*
+	設定画面 ここから-------------------------------------------------------------------
+*/
+*setting
+	cls
+	mes "始めますか？"
+	button "はじめる",*gogame
+	button "やめる",*titlescreen
+	stop
+/*
+	設定画面 ここまで-------------------------------------------------------------------
+*/
+/*
+	本体 ここから-------------------------------------------------------------------
+*/
+*gogame
+cls
+loopctr = 0
+selectposx = 10
+selectposy = 10
+*mainloop
+loopctr ++
+redraw 0
+color 255,255,255
+boxf
+hyojitext = ""
+for j,0,19
+	for i,0,19
+		if selectposx = i and selectposy = j{
+			hyojitext += "★"
+		}else{
+			if mainboard(i,j) = 0{
+				hyojitext += "・"
+			}else : if mainboard(i,j) = 1{
+				hyojitext += "●"
+			}else : if mainboard(i,j) = 2{
+				hyojitext += "○"
+			}else {
+				hyojitext += "!"
+			}
+		}
+	next
+	hyojitext += "\n"
+next
+getkey isPushingUp,38
+if isPushingUp = 0{
+	pushedup = 0
+}
+getkey isPushingDown,40
+if isPushingDown = 0{
+	pushedDown = 0
+}
+getkey isPushingLeft,37
+if isPushingLeft = 0{
+	pushedLeft = 0
+}
+getkey isPushingRight,39
+if isPushingRight = 0{
+	pushedRight = 0
+}
+getkey isPushingSpace,32
+if isPushingSpace = 0{
+	pushedSpace = 0
+}
+getkey isPushingRightclick,2
+if isPushingRightclick = 0{
+	pushedRightclick = 0
+}
+
+if isPushingUp = 1 and pushedUp = 0 and selectposy > 0{
+	selectposy --
+	pushedUp = 1
+}
+if isPushingDown = 1 and pushedDown = 0 and selectposy < 18{
+	selectposy ++
+	pushedDown = 1
+}
+if isPushingLeft = 1 and pushedLeft = 0 and selectposx > 0{
+	selectposx --
+	pushedLeft = 1
+}
+if isPushingRight = 1 and pushedRight = 0 and selectposx < 18{
+	selectposx ++
+	pushedRight = 1
+}
+if isPushingSpace = 1 and pushedSpace = 0{
+	mainboard(selectposx,selectposy) = 1
+	pushedspace = 1
+}
+pos 0,0
+color
+mes hyojitext
+mes goturn
+redraw 1
+await 16
+goto *mainloop
+/*
+	本体 ここまで-------------------------------------------------------------------
+*/

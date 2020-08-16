@@ -1,0 +1,18 @@
+aho = 0.0
+repeat
+	getkey mo,1
+	if /*mo = 0 and */was = 1 {
+		aho += 0.1
+		hsvcolor aho,$ff,$ff
+		line px,py,mousex,mousey
+		line px+1,py,mousex+1,mousey
+		line px-1,py,mousex-1,mousey
+		line px,py+1,mousex,mousey+1
+		line px,py-1,mousex,mousey-1
+		was = 0
+	}
+	if mo = 1 {
+		if was = 0 : px = mousex : py = mousey : was = 1
+	}
+	await 1
+loop
